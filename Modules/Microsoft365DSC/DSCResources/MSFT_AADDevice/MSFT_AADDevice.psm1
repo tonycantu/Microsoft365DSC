@@ -10,17 +10,56 @@ function Get-TargetResource
         $IsSingleInstance,
 
         [Parameter(Mandatory = $true)]
-        [System.UInt32]
-        $GroupLifetimeInDays,
+        [System.Boolean]
+        $AccountEnabled,
+
+        [Parameter(Mandatory = $true)]
+        [System.Collections.Generic.List]
+        $AlternativeSecurityIds,
+
+        [Parameter(Mandatory = $true)]
+        [System.DateTime]
+        $ApproximateLastLogonTimeStamp,
 
         [Parameter(Mandatory = $true)]
         [System.String]
-        [ValidateSet('All', 'Selected', 'None')]
-        $ManagedGroupTypes,
+        $DeviceId,
 
         [Parameter(Mandatory = $true)]
-        [System.String[]]
-        $AlternateNotificationEmails,
+        [System.String]
+        $DeviceMetadata,
+
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $DeviceOSType,
+
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $DeviceOSVersion,
+
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $DeviceObjectVersion,
+
+        [Parameter(Mandatory = $true)]
+        [System.Collections.Generic.List]
+        $DevicePhysicalIds,
+
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $DeviceTrustType,
+
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $DisplayName,
+
+        [Parameter(Mandatory = $true)]
+        [System.Boolean]
+        $IsCompliant,
+
+        [Parameter(Mandatory = $true)]
+        [System.Boolean]
+        $IsManaged,
 
         [Parameter()]
         [ValidateSet('Present', 'Absent')]
@@ -29,10 +68,11 @@ function Get-TargetResource
 
         [Parameter(Mandatory = $true)]
         [System.Management.Automation.PSCredential]
-        $GlobalAdminAccount
+        $GlobalAdminAccount 
+        
     )
 
-    Write-Verbose -Message "Getting configuration of AzureAD Groups Lifecycle Policy"
+    Write-Verbose -Message "Getting configuration of AzureAD Device"
     #region Telemetry
     $data = [System.Collections.Generic.Dictionary[[String], [String]]]::new()
     $data.Add("Resource", $MyInvocation.MyCommand.ModuleName)
@@ -45,14 +85,14 @@ function Get-TargetResource
 
     try
     {
-        $Policy = Get-AzureADMSGroupLifecyclePolicy -ErrorAction SilentlyContinue
+        $Devices = Get-AzureADDevice -ErrorAction SilentlyContinue
     }
     catch
     {
         Write-Verbose -Message $_
     }
 
-    if ($null -eq $Policy)
+    if ($null -eq $Devices)
     {
         $currentValues = $PSBoundParameters
         $currentValues.Ensure = "Absent"
@@ -60,14 +100,24 @@ function Get-TargetResource
     }
     else
     {
-        Write-Verbose "Found existing AzureAD Groups Lifecycle Policy"
+        Write-Verbose "Found existing AzureAD Device"
         $result = @{
-            IsSingleInstance            = 'Yes'
-            GroupLifetimeInDays         = $Policy.GroupLifetimeInDays
-            ManagedGroupTypes           = $Policy.ManagedGroupTypes
-            AlternateNotificationEmails = $Policy.AlternateNotificationEmails.Split(';')
-            Ensure                      = "Present"
-            GlobalAdminAccount          = $GlobalAdminAccount
+            IsSingleInstance      = 'Yes'
+            AccountEnabled                  = $Device.AccountEnabled
+            AlternativeSecurityIds          = $Device.AlternativeSecurityIds
+            ApproximateLastLogonTimeStamp   = $Device.ApproximateLastLogonTimeStamp
+            DeviceId                        = $Device.DeviceId
+            DeviceMetadata                  = $Device.DeviceMetadata
+            DeviceOSType                    = $Device.DeviceOSType
+            DeviceOSVersion                 = $Device.DeviceOSVersion
+            DeviceObjectVersion             = $Device.DeviceObjectVersion
+            DevicePhysicalIds               = $Device.DeviceObjectVersion
+            DeviceTrustType                 = $Device.DeviceTrustType
+            DisplayName                     = $Device.DisplayName
+            IsCompliant                     = $Device.IsCompliant
+            IsManaged                       = $Device.IsManaged
+            Ensure                          = "Present"
+            GlobalAdminAccount              = $GlobalAdminAccount
         }
 
         Write-Verbose -Message "Get-TargetResource Result: `n $(Convert-M365DscHashtableToString -Hashtable $result)"
